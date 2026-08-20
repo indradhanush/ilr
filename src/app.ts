@@ -141,6 +141,43 @@ interface Domain {
   }
 
   /**
+   * Edits persist in localStorage so a revisit finds them immediately, with
+   * no sign-in and nothing leaving the browser. The saved copy wins over
+   * trips.js on load; Reset discards it and returns to the file.
+   */
+  const DATA_KEY = "ilr.data.v1";
+
+  function saveData(): void {
+    const payload = JSON.stringify({ visaValidFrom, firstArrivalOn, trips });
+    try { localStorage.setItem(DATA_KEY, payload); } catch { /* private mode */ }
+  }
+
+  function clearSavedData(): void {
+    try { localStorage.removeItem(DATA_KEY); } catch { /* private mode */ }
+  }
+
+  /** True when saved data existed and was loaded. Malformed data is ignored. */
+  function restoreData(): boolean {
+    let raw: string | null = null;
+    try { raw = localStorage.getItem(DATA_KEY); } catch { /* private mode */ }
+    if (!raw) return false;
+    try {
+      const d = JSON.parse(raw);
+      if (!d || !Array.isArray(d.trips)) return false;
+      const str = (v: unknown) => (typeof v === "string" ? v : "");
+      visaValidFrom = str(d.visaValidFrom);
+      firstArrivalOn = str(d.firstArrivalOn);
+      trips = d.trips.map((t: unknown) => {
+        const o = (t || {}) as Record<string, unknown>;
+        return { depart: str(o.depart), ret: str(o.ret), place: str(o.place), reason: str(o.reason) };
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * The initial stay as a pseudo-trip in front of the real ones, so overlap
    * and picker-bound checks can treat all occupied date ranges uniformly.
    * Index 0 is the initial stay; trip i sits at index i + 1.
@@ -653,6 +690,7 @@ interface Domain {
       if (!had && overlapsRow(0)) {
         if (f === "visa") visaValidFrom = prev; else firstArrivalOn = prev;
       }
+      saveData();
       render();
       return;
     }
@@ -668,6 +706,7 @@ interface Domain {
     } else {
       trip[f as keyof Trip] = t.value;
     }
+    saveData();
     render();
   });
 
@@ -675,6 +714,7 @@ interface Domain {
     const t = e.target as HTMLElement;
     if (t.dataset.del === undefined) return;
     trips.splice(Number(t.dataset.del), 1);
+    saveData();
     render();
   });
 
@@ -687,10 +727,12 @@ interface Domain {
       if (t.depart && t.ret) last = Math.max(last, toDay(t.ret) + 30);
     }
     trips.push({ depart: toISO(last), ret: toISO(last + 7), place: "", reason: "" });
+    saveData();
     render();
   });
 
   el("reset").addEventListener("click", () => {
+    clearSavedData();
     loadFromFile();
     render();
     flash("reset to trips.js");
@@ -806,6 +848,7 @@ interface Domain {
   restoreSplit();
   initSplitter();
   loadFromFile();
+  restoreData();
   render();
   watchPlotHeight();
 })();
