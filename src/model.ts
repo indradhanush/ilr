@@ -111,33 +111,6 @@ function overlappingTrips(trips: Trip[]): [number, number][] {
   return out;
 }
 
-/**
- * The inclusive range of days trip i may occupy without sharing a day with
- * another trip: the gap between the nearest complete trip ending before it
- * and the nearest one starting after it. null means unbounded on that side.
- * The date pickers grey out everything outside this range. A trip that
- * already overlaps i (only possible via trips.js) imposes no bound, so an
- * overlapping row stays fixable.
- */
-function tripBounds(trips: Trip[], i: number): { min: number | null; max: number | null } {
-  const t = trips[i];
-  const s = t.depart ? toDay(t.depart) : t.ret ? toDay(t.ret) : null;
-  if (s === null) return { min: null, max: null };
-  const e = t.ret ? toDay(t.ret) : s;
-
-  let min: number | null = null;
-  let max: number | null = null;
-  trips.forEach((o, j) => {
-    if (j === i || !o.depart || !o.ret) return;
-    const os = toDay(o.depart);
-    const oe = toDay(o.ret);
-    if (oe < os) return; // inverted rows cost nothing and are flagged elsewhere
-    if (oe < s && (min === null || oe + 1 > min)) min = oe + 1;
-    if (os > e && (max === null || os - 1 < max)) max = os - 1;
-  });
-  return { min, max };
-}
-
 /** Days of absence inside [ws, we], summed across all blocks. */
 function daysIn(bs: { s: number; e: number }[], ws: number, we: number): number {
   let n = 0;
@@ -209,5 +182,5 @@ function series(bs: Block[], d0: number, d1: number): { d: number; v: number }[]
 // Node test harness. In the browser `module` is undefined and this is a no-op.
 declare const module: { exports: unknown };
 if (typeof module !== "undefined") {
-  module.exports = { DAY, WINDOW, toDay, tripBlocks, initialBlock, overlappingTrips, tripBounds, daysIn, analyseWindows, analysePastBlocks, series };
+  module.exports = { DAY, WINDOW, toDay, tripBlocks, initialBlock, overlappingTrips, daysIn, analyseWindows, analysePastBlocks, series };
 }

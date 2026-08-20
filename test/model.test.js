@@ -16,7 +16,7 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 
 const M = require(path.join(__dirname, "..", "dist", "model.js"));
-const { WINDOW, toDay, tripBlocks, initialBlock, overlappingTrips, tripBounds, daysIn, analyseWindows, analysePastBlocks, series } = M;
+const { WINDOW, toDay, tripBlocks, initialBlock, overlappingTrips, daysIn, analyseWindows, analysePastBlocks, series } = M;
 
 const LIMIT = 180;
 
@@ -201,60 +201,6 @@ test("the shipped example data has no overlaps, initial stay included", () => {
     ...data.trips.map((t) => trip(t.depart, t.return)),
   ];
   assert.deepEqual(overlappingTrips(rows), []);
-});
-
-/* ---------- tripBounds: what the date pickers grey out ---------- */
-
-test("a trip between two others is bounded to the gap it sits in", () => {
-  const ts = [
-    trip("2025-01-01", "2025-01-10"),
-    trip("2025-02-01", "2025-02-10"),
-    trip("2025-03-01", "2025-03-10"),
-  ];
-  const b = tripBounds(ts, 1);
-  // The day after the previous return through the day before the next departure.
-  assert.deepEqual(b, { min: toDay("2025-01-11"), max: toDay("2025-02-28") });
-});
-
-test("first and last trips are unbounded on the open side; a lone trip on both", () => {
-  const ts = [
-    trip("2025-01-01", "2025-01-10"),
-    trip("2025-02-01", "2025-02-10"),
-  ];
-  assert.deepEqual(tripBounds(ts, 0), { min: null, max: toDay("2025-01-31") });
-  assert.deepEqual(tripBounds(ts, 1), { min: toDay("2025-01-11"), max: null });
-  assert.deepEqual(tripBounds([trip("2025-01-01", "2025-01-10")], 0), { min: null, max: null });
-});
-
-test("bounds use the nearest neighbours regardless of row order", () => {
-  const ts = [
-    trip("2025-03-01", "2025-03-10"), // later trip listed first
-    trip("2025-02-01", "2025-02-10"),
-    trip("2025-01-01", "2025-01-10"),
-  ];
-  assert.deepEqual(tripBounds(ts, 1), { min: toDay("2025-01-11"), max: toDay("2025-02-28") });
-});
-
-test("incomplete, inverted and already-overlapping rows impose no bound", () => {
-  const ts = [
-    trip("2025-02-01", "2025-02-10"),
-    trip("2025-01-01", ""),           // no return yet
-    trip("2025-01-20", "2025-01-05"), // inverted
-    trip("2025-02-05", "2025-02-15"), // overlaps row 0: must stay fixable
-  ];
-  assert.deepEqual(tripBounds(ts, 0), { min: null, max: null });
-  // And a row with no dates at all is unbounded.
-  assert.deepEqual(tripBounds([trip("", ""), trip("2025-01-01", "2025-01-10")], 0),
-    { min: null, max: null });
-});
-
-test("a row missing one date is anchored by the date it still has", () => {
-  const ts = [
-    trip("2025-01-01", "2025-01-10"),
-    trip("2025-02-01", ""), // departure only
-    trip("2025-03-01", "2025-03-10"),
-  ];
-  assert.deepEqual(tripBounds(ts, 1), { min: toDay("2025-01-11"), max: toDay("2025-02-28") });
 });
 
 /* ---------- daysIn: inclusive boundaries ---------- */
