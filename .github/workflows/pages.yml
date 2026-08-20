@@ -31,7 +31,13 @@ jobs:
         run: npx --yes -p typescript@5 tsc -p .
 
       - name: Test
-        run: node --test test/
+        run: npx --yes c8 --reporter=text --reporter=lcov node --test test/
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage/lcov.info
 
       # The published page serves the example data; real trips.js never
       # leaves the local machine.
