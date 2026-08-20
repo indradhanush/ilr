@@ -10,6 +10,7 @@
     "forceConsistentCasingInFileNames": true,
     "rootDir": "src",
     "outDir": "dist",
+    "sourceMap": true,
     "removeComments": false
   },
   "include": ["src/**/*.ts"]

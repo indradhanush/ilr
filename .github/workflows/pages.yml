@@ -38,6 +38,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage/lcov.info
+          disable_search: true
 
       # The published page serves the example data; real trips.js never
       # leaves the local machine.
