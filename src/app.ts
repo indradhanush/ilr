@@ -542,8 +542,6 @@ interface Domain {
     const rows = withInitial();
     const ovSet = new Set<number>();
     for (const p of overlappingTrips(rows)) { ovSet.add(p[0]); ovSet.add(p[1]); }
-    const attr = (n: string, d: number | null) => (d === null ? "" : ` ${n}="${toISO(d)}"`);
-
     // The initial stay first, under its own labels, with no delete button.
     // Its header scrolls away with its row; the trips header keeps the
     // default sticky th styling.
@@ -554,15 +552,15 @@ interface Domain {
       ? "First arrival is before the visa start, so this stretch counts as nothing"
       : ovSet.has(0) ? "This stretch shares days with a trip, so those days are counted twice"
       : "";
-    const b0 = tripBounds(rows, 0);
-    const visaMax = firstArrivalOn && !initialInv ? toDay(firstArrivalOn) : b0.max;
-    const firstMin = visaValidFrom && !initialInv ? toDay(visaValidFrom) : b0.min;
+    // Never constrain a native date picker. An edit may temporarily invert or
+    // overlap ranges while the user is correcting several fields; validation
+    // below makes that visible without making a date impossible to select.
     let h = "<tbody>" +
       '<tr><th class="plainhead">Visa valid from</th><th class="plainhead">First arrival</th>' +
       '<th class="plainhead" colspan="3"></th></tr>' +
       `<tr class="${initialBad ? "bad" : ""}"${initialTitle ? ` title="${initialTitle}"` : ""}>` +
-      `<td><input type="date" data-f="visa" value="${esc(visaValidFrom)}"${attr("min", b0.min)}${attr("max", visaMax)}></td>` +
-      `<td><input type="date" data-f="first" value="${esc(firstArrivalOn)}"${attr("min", firstMin)}${attr("max", b0.max)}></td>` +
+      `<td><input type="date" data-f="visa" value="${esc(visaValidFrom)}"></td>` +
+      `<td><input type="date" data-f="first" value="${esc(firstArrivalOn)}"></td>` +
       '<td colspan="3" class="firstnote">counts as absence until you first arrive</td></tr>' +
       "<tr><th>Depart</th><th>Return</th><th>Where</th><th>Reason</th><th></th></tr>";
 
@@ -572,15 +570,9 @@ interface Domain {
       const title = inv ? "Return is before departure, so this trip counts as nothing"
                   : ovSet.has(i + 1) ? "This trip shares days with another trip, so those days are counted twice"
                   : "";
-      // Days occupied by other trips are greyed out in the native pickers:
-      // depart and return are bounded to the gap this trip sits in, and the
-      // pair is bounded to each other so a row cannot be inverted either.
-      const b = tripBounds(rows, i + 1);
-      const depMax = t.ret && !inv ? toDay(t.ret) : b.max;
-      const retMin = t.depart && !inv ? toDay(t.depart) : b.min;
       h += `<tr class="${bad ? "bad" : ""}"${title ? ` title="${title}"` : ""}>` +
-        `<td><input type="date" data-i="${i}" data-f="depart" value="${esc(t.depart)}"${attr("min", b.min)}${attr("max", depMax)}></td>` +
-        `<td><input type="date" data-i="${i}" data-f="ret" value="${esc(t.ret)}"${attr("min", retMin)}${attr("max", b.max)}></td>` +
+        `<td><input type="date" data-i="${i}" data-f="depart" value="${esc(t.depart)}"></td>` +
+        `<td><input type="date" data-i="${i}" data-f="ret" value="${esc(t.ret)}"></td>` +
         `<td><input type="text" data-i="${i}" data-f="place" value="${esc(t.place)}"></td>` +
         `<td><input type="text" data-i="${i}" data-f="reason" value="${esc(t.reason)}"></td>` +
         `<td><button class="link" data-del="${i}" title="Remove this trip">&times;</button></td></tr>`;
@@ -668,28 +660,13 @@ interface Domain {
     render();
   });
 
-  /** True when row i of withInitial() shares a day with any other row; the
-   *  initial stay is i = 0 and trip k sits at i = k + 1. */
-  function overlapsRow(i: number): boolean {
-    return overlappingTrips(withInitial()).some((p) => p[0] === i || p[1] === i);
-  }
-
   el("triptable").addEventListener("change", (e) => {
     const t = e.target as HTMLInputElement;
     const f = t.dataset.f;
     if (f === undefined) return;
 
-    // The pickers grey out days occupied by other rows, but a typed date
-    // still comes through outside min/max, so an edit that would create an
-    // overlap is quietly reverted. Only NEW overlaps are reverted: rows that
-    // arrived overlapping from trips.js stay editable, so they can be fixed.
     if (f === "visa" || f === "first") {
-      const prev = f === "visa" ? visaValidFrom : firstArrivalOn;
-      const had = overlapsRow(0);
       if (f === "visa") visaValidFrom = t.value; else firstArrivalOn = t.value;
-      if (!had && overlapsRow(0)) {
-        if (f === "visa") visaValidFrom = prev; else firstArrivalOn = prev;
-      }
       saveData();
       render();
       return;
@@ -699,10 +676,7 @@ interface Domain {
     const i = Number(t.dataset.i);
     const trip = trips[i];
     if (f === "depart" || f === "ret") {
-      const prev = trip[f];
-      const had = overlapsRow(i + 1);
       trip[f] = t.value;
-      if (!had && overlapsRow(i + 1)) trip[f] = prev;
     } else {
       trip[f as keyof Trip] = t.value;
     }
