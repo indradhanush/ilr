@@ -21,7 +21,6 @@ interface ILRData {
   limit?: number;
   visaValidFrom?: string;
   firstArrivalOn?: string;
-  today?: string | null;
   trips?: RawTrip[];
 }
 
@@ -128,7 +127,7 @@ interface Domain {
   let trips: Trip[] = [];
   let visaValidFrom = "";
   let firstArrivalOn = "";
-  const TODAY = D.today ? toDay(D.today) : Math.floor(Date.now() / DAY);
+  const TODAY = Math.floor(Date.now() / DAY);
 
   function loadFromFile(): void {
     visaValidFrom = D.visaValidFrom || "";
@@ -705,7 +704,7 @@ interface Domain {
       `  limit: ${LIMIT},\n` +
       `  visaValidFrom: "${visaValidFrom}",\n` +
       `  firstArrivalOn: "${firstArrivalOn}",\n` +
-      "  today: null,\n\n  trips: [\n" + body + "\n  ],\n};\n";
+      "\n  trips: [\n" + body + "\n  ],\n};\n";
     navigator.clipboard.writeText(txt).then(
       () => flash("copied — paste into trips.js"),
       () => { flash("copy blocked; see the console"); console.log(txt); }

@@ -13,7 +13,6 @@ window.ILR_DATA = {
     limit: 180, // days absent allowed in any rolling 12 months
     visaValidFrom: "2024-01-01",
     firstArrivalOn: "2024-01-20",
-    today: null, // null = use the real current date
 
     trips: [
         {
