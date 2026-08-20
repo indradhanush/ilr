@@ -1,4 +1,4 @@
-# ILR: Indefinite Leave to Remain
+# ILR: Indefinite Leave to Remain [![codecov](https://codecov.io/github/indradhanush/ilr/graph/badge.svg?token=MTIAVCPLNH)](https://codecov.io/github/indradhanush/ilr)
 [https://igupta.in/ilr](https://igupta.in/ilr)
 
 Tracking days spent outside the UK. Free to use. Yours to keep. Forever.
