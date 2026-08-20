@@ -3,3 +3,4 @@ trips.js
 
 # build output
 dist/
+coverage/
