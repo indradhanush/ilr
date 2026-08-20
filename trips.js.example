@@ -1,0 +1,38 @@
+// Example data file for the ILR absence tracker.
+// Copy this to trips.js and replace the dummy values with your own.
+//
+// dates are ISO: "YYYY-MM-DD"
+// depart  = day you left the UK
+// return  = day you landed back in the UK
+//
+// The stretch between the visa becoming valid and the first arrival counts
+// as absence: every day of it except the arrival day is a whole day outside
+// the UK. It is modelled by visaValidFrom and firstArrivalOn, not as a trip.
+
+window.ILR_DATA = {
+    limit: 180, // days absent allowed in any rolling 12 months
+    visaValidFrom: "2024-01-01",
+    firstArrivalOn: "2024-01-20",
+    today: null, // null = use the real current date
+
+    trips: [
+        {
+            depart: "2024-04-10",
+            return: "2024-04-24",
+            place: "France",
+            reason: "Holiday",
+        },
+        {
+            depart: "2024-08-01",
+            return: "2024-09-15",
+            place: "US",
+            reason: "Business",
+        },
+        {
+            depart: "2024-12-20",
+            return: "2025-01-05",
+            place: "India",
+            reason: "Family",
+        },
+    ],
+};

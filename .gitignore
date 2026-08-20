@@ -1,0 +1,5 @@
+# personal travel data; copy trips.js.example to trips.js to get started
+trips.js
+
+# build output
+dist/
